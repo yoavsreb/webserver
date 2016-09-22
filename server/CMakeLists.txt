@@ -36,9 +36,13 @@ set_target_properties(server PROPERTIES ENABLE_EXPORTS ON)
 # this defines the variables Boost_LIBRARIES that contain all library names
 # that we need to link to
 #find_package(Boost 1.36.0 COMPONENTS filesystem system REQUIRED)
-
-#target_link_libraries(server PUBLIC
-#	  ${Boost_LIBRARIES}
+MESSAGE(STATUS "BOOST: $ENV{BOOST_DIR}/stage/lib")
+set(BOOST_LIB $ENV{BOOST_DIR}/stage/lib)
+find_library(BOOST_FS boost_filesystem HINTS ${BOOST_LIB} )
+find_library(BOOST_SYSTEM boost_system HINTS ${BOOST_LIB} )
+link_libraries("$ENV{BOOST_DIR}/stage/lib")
+target_link_libraries(server PUBLIC
+	  ${BOOST_FS} ${BOOST_SYSTEM})
 	    # here you can add any library dependencies
 	    #	    )
 
