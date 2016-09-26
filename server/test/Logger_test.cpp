@@ -7,7 +7,7 @@
 struct CopyableFunctor {
     void run() {
         for (auto i = 0; i < 1000; i++) {
-            log(logger, msg); 
+            info(logger, msg); 
         }
     }
 
@@ -24,9 +24,11 @@ TEST(LoggerTest, test1) {
     boost::filesystem::remove("/tmp/file1.txt");
     Logger logger("/tmp/file1.txt");
     EXPECT_EQ(logger.level(), Level::INFO);
-    logger.syncWrite(Level::INFO, "Hello World!");
-    log(logger, "What's up"); 
-
+    trace(logger, "What's up1"); 
+    debug(logger, "What's up2"); 
+    info(logger, "What's up3"); 
+    warn(logger, "What's up4"); 
+    error(logger, "What's up5"); 
 }
 
 TEST(LoggerTest, test2_multithreaded) {

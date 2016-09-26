@@ -5,71 +5,34 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <thread>
 
-#include <boost/lexical_cast.hpp>
-
-enum Level {
+enum class Level {
     TRACE,
     DEBUG,
-    INFO,
-    WARN,
+    INFO, 
+    WARN, 
     ERROR
 };
 
-std::ostream& operator<<(std::ostream& ostr, Level level) {
-    switch(level) {
-        case Level::TRACE:
-            ostr << "TRACE";
-            break;
-        case Level::DEBUG: 
-            ostr << "DEBUG";
-            break;
-        case Level::INFO:
-            ostr << "INFO";
-            break;
-        case Level::WARN:
-            ostr << "WARN";
-            break;
-        case Level::ERROR:
-            ostr << "ERROR";
-            break;
-        default:
-            ostr << "n/a";
-            break;
-    }
-    return ostr;
-}
+std::ostream& operator<<(std::ostream& ostr, Level level);
 
 class Logger {
 public:
     
-    Logger(const std::string& p) : path(p), levelVal(Level::INFO), isWriting(false) {
-        out.open(path, std::ofstream::out | std::ofstream::app); 
-    }
+    explicit Logger(const std::string& p);
 
-    ~Logger() {
-        out.close();
-    }
+    ~Logger();
 
-    std::ostream& stream() {
-        return out;
-    }
-      
-    Level level() const {
-        return levelVal;
-    }
+    Level level() const { return levelVal; }
+    
+    friend void trace(Logger&, const std::string& msg);
+    friend void debug(Logger&, const std::string& msg);
+    friend void info(Logger&, const std::string& msg);
+    friend void warn(Logger&, const std::string& msg);
+    friend void error(Logger&, const std::string& msg);
+private:
 
-    void syncWrite(Level level, const std::string& msg) {
-        if (level >= levelVal) {
-            auto flagExpected = false;
-            while(!isWriting.compare_exchange_strong(flagExpected, true)) {
-                std::this_thread::yield();
-            }
-            out << level << "\t" << msg << std::endl;
-            isWriting.store(false);
-        }
-    }
+    void syncWrite(Level level, const std::string& msg);
 
 private:
     const std::string path;
@@ -78,10 +41,9 @@ private:
     std::atomic_bool isWriting;
 };
 
-void log(Logger& logger, const std::string& msg) {
-    if (logger.level() >= Level::INFO) {
-        logger.syncWrite(Level::INFO, msg);
-    }
-}
-
+void trace(Logger&, const std::string& msg);
+void debug(Logger&, const std::string& msg);
+void info(Logger&, const std::string& msg);
+void warn(Logger&, const std::string& msg);
+void error(Logger&, const std::string& msg);
 #endif

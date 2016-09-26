@@ -17,18 +17,23 @@ file(GLOB_RECURSE data resources/*)
 # add the data to the target, so it becomes visible in some IDE
 add_executable(server ${sources})
 
+#libserver will be used for tests mostly. Other than that,
+# all configuration should probably be identical to 'server'
+add_library(libserver ${sources})
+
 # just for example add some compiler flags
 #target_compile_options(example PUBLIC -std=c++1y -Wall -Wfloat-conversion)
 
 # this lets me include files relative to the root src dir with a <> pair
 target_include_directories(server PUBLIC include)
 target_include_directories(server PUBLIC $ENV{BOOST_DIR})
-
+target_include_directories(libserver PUBLIC include)
+target_include_directories(libserver PUBLIC $ENV{BOOST_DIR})
 # this copies all resource files in the build directory
 # we need this, because we want to work with paths relative to the executable
 #file(COPY ${data} DESTINATION resources)
 set_target_properties(server PROPERTIES ENABLE_EXPORTS ON)
-
+set_target_properties(libserver PROPERTIES ENABLE_EXPORTS ON)
 ###############################################################################
 ## dependencies ###############################################################
 ###############################################################################
@@ -45,7 +50,8 @@ target_link_libraries(server PUBLIC
 	  ${BOOST_FS} ${BOOST_SYSTEM})
 	    # here you can add any library dependencies
 	    #	    )
-
+target_link_libraries(libserver PUBLIC
+	  ${BOOST_FS} ${BOOST_SYSTEM})
  ###############################################################################
  ## testing ####################################################################
  ###############################################################################
@@ -64,7 +70,9 @@ foreach(file ${sources_test})
     get_filename_component(TEST_FILE ${file} NAME_WE)   
     add_executable(${TEST_FILE} ${file})
     target_include_directories(${TEST_FILE} PUBLIC ${GTEST_INCLUDE_DIR})
-    target_link_libraries(${TEST_FILE} gtest gtest_main pthread server)
+    # Can't add as a library an executable. That's why
+    # we created libserver
+    target_link_libraries(${TEST_FILE} gtest gtest_main pthread libserver)
     MESSAGE(STATUS "COMMAND:  ${CMAKE_BINARY_DIR}/server/${TEST_FILE}") 
     add_test(NAME ${TEST_FILE} COMMAND ${CMAKE_BINARY_DIR}/server/${TEST_FILE})
 endforeach() 
