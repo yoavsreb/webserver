@@ -10,11 +10,11 @@
 #include <strings.h>
 #include <stdexcept>
 
-template <typename Executor, typename ThrPool >
+template <typename ExecutorFactory, typename Executer, typename ThrPool >
 class Server {
 public:
-    Server(Executor& t, ThrPool& thP, uint16_t portNum) 
-        : executor(t), threadPool(thP), portNumber(portNum)  {}
+    Server(ExecutorFactory& t, ThrPool& thP, uint16_t portNum) 
+        : executorFactory(t), threadPool(thP), portNumber(portNum)  {}
 
     void run() {
         int sockfd, newsockfd;
@@ -41,15 +41,16 @@ public:
                 throw std::runtime_error("ERROR on accept");
             }
             
-            //threadPool.add(executor, newsockfd);
+            Executer executor = executorFactory.buildExecuter(newsockfd);
+            threadPool.add(std::move(executor), newsockfd);
 
 
-            executor(newsockfd);
+            //executor(newsockfd);
         }
     }
 
 private:
-    Executor& executor;
+    ExecutorFactory& executorFactory;
     ThrPool& threadPool;
     uint16_t portNumber;
 };

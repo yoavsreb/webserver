@@ -4,20 +4,47 @@
 #include <vector>
 #include "Server.hpp"
 
-struct MyExecutor {
-    void operator()(int socket) {
+struct SimpleFeedbackExecutor {
+    void operator()() {
         std::vector<uint8_t> buffer(256);
         int n;
                  
-        n = read(socket, buffer.data(), 255);
+        n = read(socketId, buffer.data(), 255);
         if (n < 0) {
             throw std::runtime_error("ERROR reading from socket");
         }
         buffer.resize(n);    
         printf("Here is the message: %s\n",buffer.data());
-        n = write(socket,"I got your message",18);
+        std::string msg("I got your message");
+        n = write(socketId, msg.c_str(), msg.length());
         if (n < 0) throw std::runtime_error("ERROR writing to socket");
-        close(socket);
+        close(socketId);
+        socketId = -1;
+    }
+
+    SimpleFeedbackExecutor(int i) : socketId(i) {}
+
+    ~SimpleFeedbackExecutor() {
+        if (socketId > 0) {
+            close(socketId);
+        }
+    }
+private:
+    int socketId;
+};
+
+
+struct SimpleFeedbackExecutorFactory {
+    SimpleFeedbackExecutor buildExecuter(int i) {
+        return SimpleFeedbackExecutor{i};
+    }
+};
+
+struct SameThreadThreadPool {
+    template<typename Functor>
+    void add( Functor&& functor, int taskId) {
+        std::cout << "MyThreadPool::add #" << taskId << std::endl;
+        functor();
     }
 };
 
@@ -27,8 +54,9 @@ int main(int argc, char** argv) {
 	api.helloWorld();
     
     int i;
-    MyExecutor exec;
-    Server<MyExecutor, int> s(exec, i, 8080);
+    SimpleFeedbackExecutorFactory factory;
+    SameThreadThreadPool thrPool;
+    Server<SimpleFeedbackExecutorFactory, SimpleFeedbackExecutor, SameThreadThreadPool> s{factory, thrPool, 8080};
     s.run();
 	return 0;
 }
