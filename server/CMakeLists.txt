@@ -47,7 +47,7 @@ find_library(BOOST_FS boost_filesystem HINTS ${BOOST_LIB} )
 find_library(BOOST_SYSTEM boost_system HINTS ${BOOST_LIB} )
 link_libraries("$ENV{BOOST_DIR}/stage/lib")
 target_link_libraries(server PUBLIC
-	  ${BOOST_FS} ${BOOST_SYSTEM})
+	  ${BOOST_FS} ${BOOST_SYSTEM} pthread)
 	    # here you can add any library dependencies
 	    #	    )
 target_link_libraries(libserver PUBLIC
