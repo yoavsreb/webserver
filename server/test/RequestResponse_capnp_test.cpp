@@ -46,5 +46,6 @@ TEST(RequestResponse_Capnp, test1) {
             FAIL();
         }
     }
+    boost::filesystem::remove(temp);
 }
 
