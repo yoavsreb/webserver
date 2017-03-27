@@ -8,8 +8,9 @@ cd capnp
 capnp compile -oc++ RequestResponse.capnp
 export CAPNP_INCLUDE_DIR=`pwd`
 cd ..
-cmake . -Btarget
-cd target
-make VERBOSE=1
-make test
+CC=gcc CXX=g++ CC_FLAGS="" CXX_FLAGS="" cmake -GNinja . -Btarget
+ninja -C target
+ninja -C target test
+#make VERBOSE=1
+#make test
 
