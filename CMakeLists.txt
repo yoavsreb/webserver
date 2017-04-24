@@ -8,4 +8,4 @@ enable_testing()
 
 add_library(webserver_capnp capnp/RequestResponse.capnp.c++)
 add_subdirectory (server)
-#add_subdirectory (client)
+add_subdirectory (client)

@@ -40,6 +40,8 @@ TEST(RequestResponse_Capnp, test1) {
             EXPECT_EQ(std::string{"/"}, std::string(rdr.getPath().cStr()));
             EXPECT_EQ(std::string{"body"}, std::string(rdr.getBody().cStr()));
             EXPECT_EQ(1, rdr.getHeaders().size());
+            auto header1 = rdr.getHeaders()[0];
+            EXPECT_EQ(std::string("Hello"), std::string(header1.getName().cStr()));
             close(fd);
         } else {
             std::cerr << "Failed to open file: " << temp << " Error code: " << errno << std::endl;
