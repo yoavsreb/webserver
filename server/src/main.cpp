@@ -3,11 +3,13 @@
 #include <errno.h>
 #include <vector>
 #include "Server.hpp"
+#include "Logger.hpp"
 
 #define SERVER_MT
 #ifdef SERVER_MT
 #include "ThreadPool.hpp"
 #endif
+#include "RequestExecutor.hpp"
 
 struct SimpleFeedbackExecutor {
     void operator()() {
@@ -67,13 +69,18 @@ int main(int argc, char** argv) {
 	api.helloWorld();
     
     int i;
-    SimpleFeedbackExecutorFactory factory;
+    //SimpleFeedbackExecutorFactory factory;
+    Logger logger{"/tmp/server.log"};
+    requesthandler::RequestHandlerFactory factory{logger};
+    
 #ifndef SERVER_MT
     SameThreadThreadPool thrPool;
     Server<SimpleFeedbackExecutorFactory, SimpleFeedbackExecutor, SameThreadThreadPool> s{factory, thrPool, 8080};
 #else
     ThreadPool thrPool;
-    Server<SimpleFeedbackExecutorFactory, SimpleFeedbackExecutor, ThreadPool> s{factory, thrPool, 8080};
+    //Server<SimpleFeedbackExecutorFactory, SimpleFeedbackExecutor, ThreadPool> s{factory, thrPool, 8080};
+
+    Server<requesthandler::RequestHandlerFactory, requesthandler::RequestHandler, ThreadPool> s{factory, thrPool, 8080};
 #endif
     s.run();
 	return 0;
