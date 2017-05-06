@@ -28,7 +28,8 @@ TEST(LoggerTest, test1) {
     debug(logger, "What's up2"); 
     info(logger, "What's up3"); 
     warn(logger, "What's up4"); 
-    error(logger, "What's up5"); 
+    error(logger, "What's up5");
+    info(logger, concat("hey", 1, 0.3, "string")); 
 }
 
 TEST(LoggerTest, test2_multithreaded) {

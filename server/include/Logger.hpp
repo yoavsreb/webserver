@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-
+#include <sstream>
 enum class Level {
     TRACE,
     DEBUG,
@@ -40,6 +40,26 @@ private:
     std::ofstream out;    
     std::atomic_bool isWriting;
 };
+
+inline void _concat(std::stringstream& ss) {}
+
+template<typename Arg1>
+inline void _concat(std::stringstream& ss, Arg1&& arg1) {
+    ss << arg1;
+}
+
+template<typename Arg1, typename ...Args>
+inline void _concat(std::stringstream& ss, Arg1&& arg1, Args&& ...args) {
+    ss << arg1;
+    _concat(ss, std::forward<Args>(args)...);
+}
+
+template<typename ...Args>
+inline std::string concat(Args&& ...args) {
+    std::stringstream ss;
+    _concat(ss, std::forward<Args>(args)...);
+    return ss.str();
+}
 
 void trace(Logger&, const std::string& msg);
 void debug(Logger&, const std::string& msg);
