@@ -9,7 +9,8 @@
 #include <memory>
 #include <mutex>
 #include <thread>
-
+#include <vector>
+#include <map>
 /**
  * Usage:
  * struct Worker {

@@ -1,17 +1,63 @@
-#include <iostream>
-#include "MyApi.hpp"
-#include <errno.h>
-#include <vector>
 #include "Server.hpp"
 #include "Logger.hpp"
-
-#define SERVER_MT
-#ifdef SERVER_MT
 #include "ThreadPool.hpp"
-#endif
 #include "RequestExecutor.hpp"
 
-struct SimpleFeedbackExecutor {
+#include <cstdlib>
+#include <iostream>
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
+
+struct ServerOptions {
+    std::string logfile;
+};
+
+po::options_description createOptions() {
+    po::options_description desc{"Allowed Options"};
+    desc.add_options()
+    ("help", "produce help message")
+    ("logfile", po::value<std::string>(), "Path to logfile")
+        ;
+    return desc;
+}
+
+ServerOptions loadOptions(int argc, char** argv, po::options_description&& desc) {
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    if (vm.count("help") || argc == 1) {
+        std::cout << desc;
+        exit(0);
+    } 
+    return ServerOptions{vm["logfile"].as<std::string>()};
+}
+
+
+
+
+int main(int argc, char** argv) {
+    auto serverOptions = loadOptions(argc, argv, createOptions()); 
+    Logger logger{serverOptions.logfile};
+    requesthandler::RequestHandlerFactory factory{logger};
+     
+    ThreadPool thrPool;
+    info(logger, "About to start server at localhost:8080");
+    Server<requesthandler::RequestHandlerFactory, requesthandler::RequestHandler, ThreadPool> s{factory, thrPool, 8080};
+    s.run();
+	return 0;
+}
+
+/**
+ * You can create a simple feedback server using :
+ *
+ *
+#include <errno.h>
+#include <iostream>
+
+...
+
+ struct SimpleFeedbackExecutor {
     void operator()() {
         std::vector<uint8_t> buffer(256);
         int n;
@@ -62,27 +108,6 @@ struct SameThreadThreadPool {
         functor();
     }
 };
-
-int main(int argc, char** argv) {
-	std::cout << "Starting server" << std::endl;
-	ServerApi api;
-	api.helloWorld();
-    
-    int i;
-    //SimpleFeedbackExecutorFactory factory;
-    Logger logger{"/tmp/server.log"};
-    requesthandler::RequestHandlerFactory factory{logger};
-    
-#ifndef SERVER_MT
     SameThreadThreadPool thrPool;
     Server<SimpleFeedbackExecutorFactory, SimpleFeedbackExecutor, SameThreadThreadPool> s{factory, thrPool, 8080};
-#else
-    ThreadPool thrPool;
-    //Server<SimpleFeedbackExecutorFactory, SimpleFeedbackExecutor, ThreadPool> s{factory, thrPool, 8080};
-
-    Server<requesthandler::RequestHandlerFactory, requesthandler::RequestHandler, ThreadPool> s{factory, thrPool, 8080};
-#endif
-    s.run();
-	return 0;
-}
-
+ */
