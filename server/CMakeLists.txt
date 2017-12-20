@@ -50,7 +50,7 @@ find_library(BOOST_SYSTEM boost_system HINTS ${BOOST_LIB} )
 find_library(BOOST_PO boost_program_options HINTS ${BOOST_LIB} )
 link_libraries("$ENV{BOOST_DIR}/stage/lib")
 target_link_libraries(server PUBLIC
-	  ${BOOST_FS} ${BOOST_SYSTEM} ${BOOST_PO} pthread webserver_capnp kj capnp capnpc)
+	  ${BOOST_FS} ${BOOST_SYSTEM} ${BOOST_PO} pthread webserver_capnp kj capnp capnpc dl sqlite3)
 	   
         # here you can add any library dependencies
 target_link_libraries(libserver PUBLIC
@@ -75,7 +75,7 @@ foreach(file ${sources_test})
     target_include_directories(${TEST_FILE} PUBLIC ${GTEST_INCLUDE_DIR})
     # Can't add as a library an executable. That's why
     # we created libserver
-    target_link_libraries(${TEST_FILE} gtest gtest_main pthread libserver webserver_capnp kj capnp capnpc)
+    target_link_libraries(${TEST_FILE} gtest gtest_main pthread libserver webserver_capnp kj capnp capnpc dl sqlite3)
     MESSAGE(STATUS "COMMAND:  ${CMAKE_BINARY_DIR}/server/${TEST_FILE}") 
     add_test(NAME ${TEST_FILE} COMMAND ${CMAKE_BINARY_DIR}/server/${TEST_FILE})
 endforeach() 

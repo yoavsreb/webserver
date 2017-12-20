@@ -1,4 +1,6 @@
 = GraphDB Design =
+TODO: Move this storage part to a specific storage implementaation.
+Differntiate between a DB layer and its storage layer.
 
 == Storage ==
     Elements have a const size, defined in compilation time.
@@ -47,6 +49,57 @@ Max number of elements in a page is limited by:
 
 == Page Splits ==
     A page split is a heavy operation that scans the entire page and splits the elements into 2 new pages of equal size. System assumes that due to uniform distribution of the Key-hashing function, the pages should end up with somewhat similar number of elements.
-
 == Page Joins == 
-    Once elements have     
+    Once elements have
+    
+== Pages imlementations ==
+Page data is implemented in struct PageData
+Page operations are implemented in PageManipulator
+
+PageRepository will return us PageData by pageId.
+PageManipulator does not need any data.
+
+== DB ==
+Operations are:
+* Insert Node
+* Insert Edge
+* Delete Node
+* Delete Edge
+* Query
+
+Node:
+    std::bool exists; // whether the record is on
+    std::uint8_t nodeId[32]; // unique ID for node
+    std::uint8_t nodeType;
+    std::uint8_t data[222];
+
+Edge:
+    std::uint8_t edgeId[32];
+    std::uint8_t edgetype;
+
+
+Queries
+    nodeExists(nodeId)
+    edgeExists(nodeId)
+    getAllNodesConnectedToNode(NodeId)
+    getAllEdgesConnectedToNode(NodeId)
+    getNodesConnectedToEdge(EdgeId)
+    getOtherEdgeNode(NodeId, EdgeId)
+    
+
+Filters:
+    NodeType in [type1, type2, ...]
+    EdgeType in [type1, type2, ...]
+
+
+data:
+Nodes
+Local Edges
+Incoming cross-shard edges
+Outgoing cross-shard edges
+
+
+
+Fast query for edge between Node1, Node2:
+bloom(Node1 % Node2)
+
