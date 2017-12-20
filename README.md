@@ -10,6 +10,7 @@ Component are mostly implemented from zero.
  - ThreadPool
  - Logging (Partially)
  - Socket listening
+ - Simple Write-Ahead-Log mechanism
 
 ## Components to implement
  - Handling exhausted resources
