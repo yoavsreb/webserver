@@ -11,6 +11,19 @@
 namespace server { namespace graphdb {
 
 /**
+ * RAII wrapper for Sql statement objects
+ */
+class SqlStmtHander {
+public:
+    SqlStmtHander(sqlite3_stmt* s) : stmt(s) {}
+    ~SqlStmtHander() {
+        sqlite3_finalize(stmt);
+    }
+private:
+    sqlite3_stmt* stmt;
+};
+    
+/**
  * An iterator used to iterate over Sqlite Prepared and Binded SELECT statements (i.e. query results)
  */
 
@@ -25,6 +38,15 @@ public:
     SqliteResultsIterator() : pStmt(nullptr) {}
 
     //TODO: add access methods here.
+    
+    std::string getStringColumn(int column) const {
+        return std::string{reinterpret_cast<const char*>(sqlite3_column_text(pStmt, column))};
+    }
+
+    int getIntColumn(int column) const {
+        return sqlite3_column_int(pStmt, column);
+    }    
+
     
 private:
     friend class boost::iterator_core_access;
@@ -62,8 +84,8 @@ void executeStatment(const std::string& stmt, sqlite3* pDB) {
     if(SQLITE_OK != sqlite3_prepare_v2(pDB, stmt.c_str(), stmt.size(), &pStmt, NULL)) {
         throw std::runtime_error{"Failed to create stmt: " + stmt};
     }
+    SqlStmtHander handler(pStmt);
     sqlite3_step(pStmt);
-    sqlite3_finalize(pStmt);
 }
 
 
@@ -71,19 +93,43 @@ void executeStatment(const std::string& stmt, sqlite3* pDB) {
 /**
  * Returns NodeId from a nodes table
  **/
-std::vector<Id> getNodesQuery(sqlite3_stmt* stmt) {
-    std::vector<Id> retval;
+std::vector<Node> getNodesQuery(sqlite3_stmt* stmt) {
+    std::vector<Node> retval;
     SqliteResultsIterator iterBegin(stmt);
     SqliteResultsIterator iterEnd;
     while(iterBegin != iterEnd) {
-        auto id = createFromString(std::string{reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))});
-        retval.push_back(id);
+        // moving from const unsigned char to const char *
+        auto id = createFromString(iterBegin.getStringColumn(0));
+        auto nodeType = static_cast<NodeType>(iterBegin.getIntColumn(1));
+        retval.push_back({id, nodeType});
         iterBegin++;
     }
     return retval;
 }
 
-SqlStorage::SqlStorage(const char* path) {
+
+/**
+ * Both Edges and Nodes tables have the ID as the
+ * first column
+ **/
+std::vector<Edge> getEdgesQuery(sqlite3_stmt* stmt) {
+    std::vector<Edge> retval;
+    SqliteResultsIterator iterBegin(stmt);
+    SqliteResultsIterator iterEnd;
+    while(iterBegin != iterEnd) {
+        // moving from const unsigned char to const char *
+        auto id = createFromString(iterBegin.getStringColumn(0));
+        
+        auto nodeid1 = createFromString(iterBegin.getStringColumn(2));
+        auto nodeid2 = createFromString(iterBegin.getStringColumn(3));
+        int nodeType = iterBegin.getIntColumn(1);
+        retval.push_back({id, static_cast<Edgetype>(nodeType), nodeid1, nodeid2});
+        iterBegin++;
+    }
+    return retval;
+}
+
+SqlStorage::SqlStorage(const char* path) : pDB(nullptr) {
     if (sqlite3_open(path, &pDB)!= SQLITE_OK) {
         throw std::runtime_error{std::string{"Could not open "} + path};
     }
@@ -125,21 +171,72 @@ Id SqlStorage::createNewEdge(Id node1, Id node2, Edgetype eType) {
 
 
 bool SqlStorage::nodeExists(Id node1) const {
-    std::string selectQuery = "SELECT * FROM nodes where id=?;";
-    sqlite3_stmt *pStmt;
-    if (SQLITE_OK != sqlite3_prepare_v2(pDB, selectQuery.c_str(), -1, &pStmt, nullptr)) {
-        std::cout << "Failed to prepare query" << std::endl;
+    sqlite3_stmt *pNodeExistsQuery;
+    std::string nodeSelectQuery = "SELECT * FROM nodes where id=?;";
+    if (SQLITE_OK != sqlite3_prepare_v2(pDB, nodeSelectQuery.c_str(), -1, &pNodeExistsQuery, nullptr)) {
+        throw std::runtime_error{std::string{"Failed to prepare nodes query"}};
     }
-    
+    SqlStmtHander handler(pNodeExistsQuery);
     std::string id = to_string(node1);
-    if(SQLITE_OK != sqlite3_bind_text(pStmt, 1, id.c_str(), id.size(), SQLITE_STATIC)) {
+    if(SQLITE_OK != sqlite3_bind_text(pNodeExistsQuery, 1, id.c_str(), id.size(), SQLITE_STATIC)) {
         std::cout << "Failed to bind" << std::endl;
     }
-    auto ids = getNodesQuery(pStmt);
-    sqlite3_finalize(pStmt);
+    auto ids = getNodesQuery(pNodeExistsQuery);
     return ids.size() > 0;
 }
 
 
+bool SqlStorage::edgeExists(Id edgeId) const {
+    sqlite3_stmt *pEdgeExistsQuery;
+    std::string edgeSelectQuery = "SELECT * FROM edges where id=?;";
+    if (SQLITE_OK != sqlite3_prepare_v2(pDB, edgeSelectQuery.c_str(), -1, &pEdgeExistsQuery, nullptr)) {
+        throw std::runtime_error{std::string{"Failed to prepare edges query"}};
+    }
+    SqlStmtHander handler(pEdgeExistsQuery);
+    std::string id = to_string(edgeId);
+    if(SQLITE_OK != sqlite3_bind_text(pEdgeExistsQuery, 1, id.c_str(), id.size(), SQLITE_STATIC)) {
+        std::cout << "Failed to bind" << std::endl;
+    }
+    auto ids = getEdgesQuery(pEdgeExistsQuery);
+    return ids.size() > 0;
+}
+
+boost::optional<Node> SqlStorage::getNode(Id nodeId) const {
+    sqlite3_stmt *pNodeExistsQuery;
+    std::string nodeSelectQuery = "SELECT * FROM nodes where id=?;";
+    if (SQLITE_OK != sqlite3_prepare_v2(pDB, nodeSelectQuery.c_str(), -1, &pNodeExistsQuery, nullptr)) {
+        throw std::runtime_error{std::string{"Failed to prepare nodes query"}};
+    }
+    SqlStmtHander handler(pNodeExistsQuery);
+    std::string id = to_string(nodeId);
+    if(SQLITE_OK != sqlite3_bind_text(pNodeExistsQuery, 1, id.c_str(), id.size(), SQLITE_STATIC)) {
+        std::cout << "Failed to bind" << std::endl;
+    }
+    auto ids = getNodesQuery(pNodeExistsQuery);
+    if (ids.empty()) {
+        return boost::none;
+    } else {
+        return boost::optional<Node>{ids.front()};
+    }
+}
+
+boost::optional<Edge> SqlStorage::getEdge(Id edgeId) const {
+    sqlite3_stmt *pEdgeExistsQuery;
+    std::string edgeSelectQuery = "SELECT * FROM edges where id=?;";
+    if (SQLITE_OK != sqlite3_prepare_v2(pDB, edgeSelectQuery.c_str(), -1, &pEdgeExistsQuery, nullptr)) {
+        throw std::runtime_error{std::string{"Failed to prepare edges query"}};
+    }
+    SqlStmtHander handler(pEdgeExistsQuery);
+    std::string id = to_string(edgeId);
+    if(SQLITE_OK != sqlite3_bind_text(pEdgeExistsQuery, 1, id.c_str(), id.size(), SQLITE_STATIC)) {
+        std::cout << "Failed to bind" << std::endl;
+    }
+    auto ids = getEdgesQuery(pEdgeExistsQuery);
+    if (ids.empty()) {
+        return boost::none;
+    } else {
+        return boost::optional<Edge>{ids.front()};
+    }
+}
 
 }}

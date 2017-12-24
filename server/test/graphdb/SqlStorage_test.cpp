@@ -16,4 +16,19 @@ TEST(SqlStorage, testOpenCreate) {
 
     EXPECT_TRUE(storage.nodeExists(id1));
     EXPECT_TRUE(storage.nodeExists(id2));
+    EXPECT_TRUE(storage.edgeExists(eid));
+
+    auto node1Opt = storage.getNode(id1);
+    EXPECT_TRUE(node1Opt);
+    auto node1 = *node1Opt;
+    EXPECT_EQ(node1.nodeId, id1);
+    EXPECT_EQ(node1.nodeType, 1);
+
+    auto edgeOpt = storage.getEdge(eid);
+    EXPECT_TRUE(edgeOpt);
+    auto edge = *edgeOpt;
+    EXPECT_EQ(edge.edgeId, eid);
+    EXPECT_EQ(edge.edgeType, 2);
+    EXPECT_EQ(edge.v1, id1);
+    EXPECT_EQ(edge.v2, id2);
 }

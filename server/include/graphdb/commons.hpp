@@ -19,18 +19,6 @@ struct Node {
 struct Edge {
     Id edgeId;
     Edgetype edgeType;
-};
-
-struct LocalEdge {
-    Id edgeId;
-    Edgetype edgeType;
-    uint8_t v1;
-    uint8_t v2;
-};
-
-struct GeneralEdge {
-    Id edgeId;
-    Edgetype edgeType;
     Id v1;
     Id v2;
 };
