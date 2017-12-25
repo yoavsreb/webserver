@@ -23,6 +23,8 @@ public:
     boost::optional<Node> getNode(Id nodeId) const;
     boost::optional<Edge> getEdge(Id edgeId) const;
 
+    std::vector<Edge> getIncomingEdges(Id nodeId) const;
+    std::vector<Edge> getOutgoingEdges(Id nodeId) const;
 private:
     sqlite3 *pDB;
 };
