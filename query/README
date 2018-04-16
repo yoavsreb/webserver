@@ -1,0 +1,7 @@
+This library contains the Lexer and Parser definition for the query language.
+
+In order to compile you should do:
+* flex++ Scanner.l
+* g++ Lexer.cpp
+
+
