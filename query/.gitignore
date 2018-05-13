@@ -1,3 +1,3 @@
 a.out
 Lexer.*
-parser.yy.tab.*
+parser.tab.*

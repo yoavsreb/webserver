@@ -2,22 +2,15 @@
  // cal analyzer run: "flex Lexer.l"
 
 #include <stdio.h>
-
 #include "AbstractLanguage.hpp"
+#include "parser.tab.hh"
 
-#define YYSTYPE Token
-
-#include "parser.yy.tab.h"
-
-//extern "C" YYSTYPE yylval;
-
-int yyerror(const char* msg);
-
-//YYSTYPE yylval;
 %}
 %option noyywrap
 %option outfile="Lexer.cpp" header-file="Lexer.hpp"
 %option warn nodefault
+%option reentrant
+%option bison-bridge
    
 LPAREN      "("
 RPAREN      ")"
@@ -31,7 +24,7 @@ WS          [ \r\n\t]*
 %%
 
 {WS}            { /* Skip blanks. */ }
-{NUMBER}        { int temp; sscanf(yytext, "%d", &temp); yylval.value = temp; return NUMBER;}
+{NUMBER}        { int temp; sscanf(yytext, "%d", &temp); yylval_param->pToken = std::shared_ptr<Token>(new Token(TokenType::NUMBER, temp)); return NUMBER;}
 {UUID}          {
     printf("Found UUID\n");
     }
@@ -44,11 +37,9 @@ WS          [ \r\n\t]*
     return PLUS; 
     }
 {LPAREN}        { 
-    printf("Found lparen\n");
     return LPAREN; 
     }
 {RPAREN}        { 
-    printf("Found rparen\n");
     return RPAREN; 
     }
 .               {  
@@ -56,15 +47,10 @@ WS          [ \r\n\t]*
     }
 %%
 
-int yyerror(const char *msg) {
+int yyerror(yyscan_t driver, const char *msg) {
     fprintf(stderr,"Error:%s\n",msg); return 0;
 }
 
-yyFlexLexer lexer;
-
-int yylex() {
-    return lexer.yylex();
-}
 
 /*
     This is only used to check tokenizations
