@@ -34,19 +34,23 @@ typedef void* yyscan_t;
 %token NUMBER 
 %token UUID
 
+%left PLUS 
 
 %%
 program:
-    wrapped_scalar { 
-        *root = new ParsingNode($1);
-    }  | scalar { 
+    expression { 
         *root = new ParsingNode($1); 
     };
-wrapped_scalar:
-       LPAREN scalar RPAREN {
-    $$.pExpression = std::make_shared<Expression>(ExpressionType::WRAPPED_EXPR, $2.pExpression);
-     }
-    ;
+
+expression:
+    expression PLUS expression {
+        $$.pExpression = std::make_shared<Expression>(ExpressionType::ADD_EXPR, $1.pExpression, $3.pExpression);
+    } | 
+    LPAREN expression RPAREN {
+        $$.pExpression = std::make_shared<Expression>(ExpressionType::WRAPPED_EXPR, $2.pExpression);
+    } | scalar {
+        $$.pExpression = $1.pExpression;
+    };
 scalar:
         NUMBER {
     $$.pExpression = std::make_shared<Expression>($1.pToken); 
@@ -57,33 +61,7 @@ scalar:
       
 %%
 
-
-
-
-
 int main(int, char**) {
-    /**
-        Change to c'tor with shared_ptr
-        Change YYSTYPE to be the ParsingNode 
-        the Lexer only uses the tokens, The parser builds tree of of Expression.
-        ParsingNode contains only 2 shared_ptr therefore is easily copyable without significant penality.
-    */
-     
-    /*
-    Token token1{TokenType::NUMBER, 5};
-    Token token2{TokenType::NUMBER, 6};
-    Token token3{TokenType::NUMBER, 7};   
-     
-    Expression exp1(token1);
-    Expression exp2(token2);
-    Expression exp3(token3);
-    
-    Expression exp4{ExpressionType::ADD_EXPR, exp1, exp2};
-    Expression exp5{ExpressionType::ADD_EXPR, exp4, exp3};
-    PrintVisitor visitor;
-    exp5.accept(visitor);
-    */
-    
     std::cout << "Starting to parse input" << std::endl;
     yyscan_t scanner;
     yylex_init(&scanner);
