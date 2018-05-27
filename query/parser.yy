@@ -33,14 +33,17 @@ typedef void* yyscan_t;
 %token PLUS MULTIPLY LPAREN RPAREN
 %token NUMBER 
 %token UUID
+%token IDENTIFIER NODE_KEYWORD EDGE_KEYWORD
 
-%left PLUS 
+// This is to solve shift/reduce ambiguity (a + b + c ) -> ((a+b) + c)
+%left PLUS  
 
 %%
 program:
     expression { 
         *root = new ParsingNode($1); 
-    };
+    } |
+    NODE_KEYWORD { std::cout << "found node" << std::endl;};
 
 expression:
     expression PLUS expression {
@@ -65,12 +68,12 @@ int main(int, char**) {
     std::cout << "Starting to parse input" << std::endl;
     yyscan_t scanner;
     yylex_init(&scanner);
-    ParsingNode* root;
+    ParsingNode* root = nullptr;
 
     do {
         yyparse(&root, scanner);
         PrintVisitor visitor;
-        if (root->pExpression == nullptr) {
+        if (!root || root->pExpression == nullptr) {
             std::cout << "root pexpression is null " << std::endl; } else {
             root->pExpression->accept(visitor);
             delete root;

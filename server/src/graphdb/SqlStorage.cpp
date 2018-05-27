@@ -4,8 +4,6 @@
 #include <string>
 #include <stdexcept>
 #include <vector>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
 namespace server { namespace graphdb {
@@ -78,16 +76,6 @@ private:
 
     sqlite3_stmt *pStmt;
 };
-
-Id createRandomUUID() {
-    static auto generator = boost::uuids::random_generator();
-    return Id{generator()};
-}
-
-Id createFromString(const std::string& str) {
-    static boost::uuids::string_generator gen;
-    return gen(str);
-}
 
 void executeStatment(const std::string& stmt, sqlite3* pDB) {
     sqlite3_stmt *pStmt;

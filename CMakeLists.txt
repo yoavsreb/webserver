@@ -7,5 +7,6 @@ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)
 enable_testing()
 
 add_library(webserver_capnp capnp/RequestResponse.capnp.c++)
+add_subdirectory(query)
 add_subdirectory (server)
 add_subdirectory (client)

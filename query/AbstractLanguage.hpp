@@ -10,11 +10,8 @@
 enum class TokenType {
     NONE = 0,
     NUMBER,
-    PLUS,
-    MULTIPLY,
-    LPARAN,
-    RPARAN,
-    UUID
+    UUID,
+    IDENTIFIER,
 };
 
 struct Token {

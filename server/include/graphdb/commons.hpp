@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 namespace server { namespace graphdb {
 
@@ -24,6 +26,8 @@ struct Edge {
 };
 
 
+Id createRandomUUID();
 
+Id createFromString(const std::string& str);
 }}
 #endif

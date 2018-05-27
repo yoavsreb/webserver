@@ -20,7 +20,9 @@ MULTIPLY    "*"
 UUID        [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 NUMBER      [0-9]+
 WS          [ \r\n\t]*
-
+IDENTIFIER  [a-z]+
+NODE        "Node"
+EDGE        "Edge"
 %%
 
 {WS}            { /* Skip blanks. */ }
@@ -42,6 +44,10 @@ WS          [ \r\n\t]*
 {RPAREN}        { 
     return RPAREN; 
     }
+{IDENTIFIER}    { yylval_param->pToken = std::shared_ptr<Token>(new Token(TokenType::IDENTIFIER, yytext)); return IDENTIFIER;
+    }
+{NODE}          { return NODE_KEYWORD; }
+{EDGE}          { return EDGE_KEYWORD; }
 .               {  
     printf("Found other\n");
     }
