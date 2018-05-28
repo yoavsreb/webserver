@@ -16,11 +16,14 @@ LPAREN      "("
 RPAREN      ")"
 PLUS        "+"
 MULTIPLY    "*"
-
+CLPAREN     "{"
+CRPAREN     "}"
+VERT_SEP    "|"
+COMMA       ","
 UUID        [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 NUMBER      [0-9]+
 WS          [ \r\n\t]*
-IDENTIFIER  [a-z]+
+IDENTIFIER  [a-z]{1}[a-zA-Z0-9]*
 NODE        "Node"
 EDGE        "Edge"
 %%
@@ -44,6 +47,18 @@ EDGE        "Edge"
 {RPAREN}        { 
     return RPAREN; 
     }
+{CLPAREN}        { 
+    return CLPAREN; 
+    }
+{CRPAREN}        { 
+    return CRPAREN; 
+    }
+{VERT_SEP}      {
+    return VERT_SEP;
+    }
+{COMMA}         {
+    return COMMA;
+}
 {IDENTIFIER}    { yylval_param->pToken = std::shared_ptr<Token>(new Token(TokenType::IDENTIFIER, yytext)); return IDENTIFIER;
     }
 {NODE}          { return NODE_KEYWORD; }

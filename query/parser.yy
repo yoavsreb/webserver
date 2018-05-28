@@ -30,7 +30,7 @@ typedef void* yyscan_t;
 %lex-param {yyscan_t scanner}
 
 
-%token PLUS MULTIPLY LPAREN RPAREN
+%token PLUS MULTIPLY LPAREN RPAREN CLPAREN CRPAREN VERT_SEP COMMA
 %token NUMBER 
 %token UUID
 %token IDENTIFIER NODE_KEYWORD EDGE_KEYWORD
@@ -43,8 +43,17 @@ program:
     expression { 
         *root = new ParsingNode($1); 
     } |
-    NODE_KEYWORD { std::cout << "found node" << std::endl;};
-
+    CLPAREN decls VERT_SEP expression CRPAREN {
+        *root = new ParsingNode(*($2.pExpression), *($4.pExpression));
+    };
+decls: decl { $$.pExpression = std::make_shared<Expression>(ExpressionType::DECLS, $1.pExpression); } | 
+        decls COMMA decl { $$.pExpression = $1.pExpression;
+        $$.pExpression->subExpr.push_back($3.pExpression);
+        } |
+        %empty {};
+decl: NODE_KEYWORD IDENTIFIER {
+        $$.pExpression = std::make_shared<Expression>(ExpressionType::DECL_NODE, Expression($2.pToken)); 
+    }
 expression:
     expression PLUS expression {
         $$.pExpression = std::make_shared<Expression>(ExpressionType::ADD_EXPR, $1.pExpression, $3.pExpression);
@@ -76,6 +85,10 @@ int main(int, char**) {
         if (!root || root->pExpression == nullptr) {
             std::cout << "root pexpression is null " << std::endl; } else {
             root->pExpression->accept(visitor);
+            if (root->pDeclarations != nullptr) {
+                std::cout << "Printing declarations: " << std::endl;
+                root->pDeclarations->accept(visitor);
+            }
             delete root;
             root = nullptr;
         }
