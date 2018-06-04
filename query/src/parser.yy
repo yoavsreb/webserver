@@ -24,13 +24,12 @@ typedef void* yyscan_t;
 }
 
 %define api.pure true
-
-%parse-param {ParsingNode **root}
+%parse-param { ParsingNode** root}
 %parse-param {yyscan_t scanner}
 %lex-param {yyscan_t scanner}
 
 
-%token PLUS MULTIPLY LPAREN RPAREN CLPAREN CRPAREN VERT_SEP COMMA
+%token PLUS MULTIPLY LPAREN RPAREN CLPAREN CRPAREN SRPAREN SLPAREN VERT_SEP COMMA
 %token NUMBER 
 %token UUID
 %token IDENTIFIER NODE_KEYWORD EDGE_KEYWORD
@@ -55,6 +54,9 @@ decl: NODE_KEYWORD IDENTIFIER {
         $$.pExpression = std::make_shared<Expression>(ExpressionType::DECL_NODE, Expression($2.pToken)); 
     }
 expression:
+    IDENTIFIER SLPAREN IDENTIFIER SRPAREN {
+        $$.pExpression = std::make_shared<Expression>(ExpressionType::REF_ATTR_EXPR, Expression($1.pToken), Expression($3.pToken)); 
+    } |
     expression PLUS expression {
         $$.pExpression = std::make_shared<Expression>(ExpressionType::ADD_EXPR, $1.pExpression, $3.pExpression);
     } | 
@@ -73,26 +75,14 @@ scalar:
       
 %%
 
-int main(int, char**) {
-    std::cout << "Starting to parse input" << std::endl;
+std::unique_ptr<ParsingNode> parseString(const std::string& text) {
     yyscan_t scanner;
     yylex_init(&scanner);
     ParsingNode* root = nullptr;
-
-    do {
-        yyparse(&root, scanner);
-        PrintVisitor visitor;
-        if (!root || root->pExpression == nullptr) {
-            std::cout << "root pexpression is null " << std::endl; } else {
-            root->pExpression->accept(visitor);
-            if (root->pDeclarations != nullptr) {
-                std::cout << "Printing declarations: " << std::endl;
-                root->pDeclarations->accept(visitor);
-            }
-            delete root;
-            root = nullptr;
-        }
-    } while(!feof(stdin));
+    yy_scan_string(text.c_str(), scanner);
+    yyparse(&root, scanner);
     yylex_destroy(scanner);
-    return 0;
+    return std::unique_ptr<ParsingNode>(root);
 }
+
+

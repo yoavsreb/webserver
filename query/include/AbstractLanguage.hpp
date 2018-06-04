@@ -29,6 +29,7 @@ struct Token {
 enum class ExpressionType {
     SCALAR, // holds a terminal value/token - string, uuid, number. This is the type of expression that doesn't contain any sub-expressions.
     WRAPPED_EXPR,
+    REF_ATTR_EXPR,
     MULT_EXPR,
     ADD_EXPR,
     DECL_NODE,
@@ -137,6 +138,7 @@ public:
         case ExpressionType::WRAPPED_EXPR:  std::cout << "Wrapped Expression" << std::endl; break;
         case ExpressionType::DECL_NODE: std::cout <<"Declare node " << std::endl; break;
         case ExpressionType::DECLS:     std::cout << "Declarations: " << std:: endl; break;
+        case ExpressionType::REF_ATTR_EXPR: std::cout << "Reference expression" << std::endl; break;
         default: std::cout << "Not expected" << std::endl;
     }
     push();

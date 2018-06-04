@@ -18,6 +18,8 @@ PLUS        "+"
 MULTIPLY    "*"
 CLPAREN     "{"
 CRPAREN     "}"
+SLPAREN     "["
+SRPAREN     "]"
 VERT_SEP    "|"
 COMMA       ","
 UUID        [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
@@ -52,6 +54,12 @@ EDGE        "Edge"
     }
 {CRPAREN}        { 
     return CRPAREN; 
+    }
+{SLPAREN}        { 
+    return SLPAREN; 
+    }
+{SRPAREN}        { 
+    return SRPAREN; 
     }
 {VERT_SEP}      {
     return VERT_SEP;
