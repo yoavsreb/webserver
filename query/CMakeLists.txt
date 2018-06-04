@@ -2,10 +2,13 @@ project(query)
 
 file(GLOB_RECURSE sources_test test/*.cpp)
 
-add_custom_target(Lexer.cpp COMMAND flex src/Scanner.l)
-add_custom_target(parser.tab.cc COMMAND bison -d src/parser.yy)
+
+add_custom_target(Lexer.cpp ALL COMMAND flex ${CMAKE_CURRENT_SOURCE_DIR}/src/Scanner.l)
+add_custom_target(parser.tab.cc ALL COMMAND bison -d ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.yy)
 
 add_executable(a.out src/main.cpp parser.tab.cc Lexer.cpp)
+add_dependencies(a.out Lexer.cpp)
+add_dependencies(a.out parser.tab.cc)
 add_library(query SHARED parser.tab.cc Lexer.cpp)
 
 target_include_directories(query PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} include)
@@ -25,10 +28,9 @@ set_target_properties(gtest_main PROPERTIES IMPORTED_LOCATION ${GTEST_LIBS_DIR}/
 foreach(file ${sources_test})
     get_filename_component(TEST_FILE ${file} NAME_WE)   
     add_executable(${TEST_FILE} ${file})
-    target_include_directories(${TEST_FILE} PUBLIC ${GTEST_INCLUDE_DIR})
+    target_include_directories(${TEST_FILE} PUBLIC ${GTEST_INCLUDE_DIR} include)
     # Can't add as a library an executable. That's why
     # we created libserver
     target_link_libraries(${TEST_FILE} gtest gtest_main pthread query)
-    MESSAGE(STATUS "COMMAND:  ${CMAKE_BINARY_DIR}/query/${TEST_FILE}") 
     add_test(NAME ${TEST_FILE} COMMAND ${CMAKE_BINARY_DIR}/query/${TEST_FILE})
 endforeach() 
