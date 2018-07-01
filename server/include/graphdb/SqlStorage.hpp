@@ -25,6 +25,9 @@ public:
 
     std::vector<Edge> getIncomingEdges(Id nodeId) const;
     std::vector<Edge> getOutgoingEdges(Id nodeId) const;
+
+    std::vector<Node> getNodesByType(NodeType type) const;
+
 private:
     sqlite3 *pDB;
 };

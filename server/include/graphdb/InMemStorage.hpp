@@ -19,6 +19,8 @@ public:
 
     std::vector<Edge> getIncomingEdges(Id nodeId) const;
     std::vector<Edge> getOutgoingEdges(Id nodeId) const;
+
+    std::vector<Node> getNodesByType(NodeType type) const;
 private:
     std::map<Id, Node> nodes;
     std::map<Id, Edge> edges;

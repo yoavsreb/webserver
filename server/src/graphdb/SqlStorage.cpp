@@ -186,7 +186,6 @@ bool SqlStorage::nodeExists(Id node1) const {
 
 bool SqlStorage::edgeExists(Id edgeId) const {
     SqlStmtHander handler;
-    sqlite3_stmt *pEdgeExistsQuery;
     std::string edgeSelectQuery = "SELECT * FROM edges where id=?;";
     if (SQLITE_OK != sqlite3_prepare_v2(pDB, edgeSelectQuery.c_str(), -1, handler.statementPtr(), nullptr)) {
         throw std::runtime_error{std::string{"Failed to prepare edges query"}};
@@ -264,4 +263,16 @@ std::vector<Edge> SqlStorage::getOutgoingEdges(Id nodeId) const {
     return getEdgesQuery(handler.statement());
 }
 
+std::vector<Node> SqlStorage::getNodesByType(NodeType type) const {
+    SqlStmtHander handler;
+    std::string query = "SELECt * FROM nodes WHERE type=?";
+
+    if (SQLITE_OK != sqlite3_prepare_v2(pDB, query.c_str(), -1, handler.statementPtr(), nullptr)) {
+        throw std::runtime_error{std::string{"Failed to prepare edges query"}};
+    }
+    if(SQLITE_OK != sqlite3_bind_int64(handler.statement(), 1, static_cast<sqlite_int64>(type))) {
+        std::cout << "Failed to bind" << std::endl;
+    }
+    return getNodesQuery(handler.statement());
+}
 }}

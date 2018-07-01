@@ -36,4 +36,15 @@ TEST(SqlStorage, testOpenCreate) {
     auto outgoingEdges = storage.getOutgoingEdges(id1);
     EXPECT_EQ(incomingEdges.size(), outgoingEdges.size());
     EXPECT_EQ(incomingEdges.front().edgeId, outgoingEdges.front().edgeId);
+
+    {
+        auto nodesByType = storage.getNodesByType(1);
+        EXPECT_EQ(id1, nodesByType.front().nodeId); 
+    }
+    {
+        auto nodesByType = storage.getNodesByType(2);
+
+        EXPECT_EQ(id2, nodesByType.front().nodeId); 
+
+    }
 }
