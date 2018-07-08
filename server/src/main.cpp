@@ -1,51 +1,49 @@
-#include "Server.hpp"
 #include "Logger.hpp"
-#include "ThreadPool.hpp"
 #include "RequestExecutor.hpp"
+#include "Server.hpp"
+#include "ThreadPool.hpp"
 
+#include <boost/program_options.hpp>
 #include <cstdlib>
 #include <iostream>
-#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 
 struct ServerOptions {
-    std::string logfile;
+  std::string logfile;
 };
 
 po::options_description createOptions() {
-    po::options_description desc{"Allowed Options"};
-    desc.add_options()
-    ("help", "produce help message")
-    ("logfile", po::value<std::string>(), "Path to logfile")
-        ;
-    return desc;
+  po::options_description desc{"Allowed Options"};
+  desc.add_options()("help", "produce help message")(
+      "logfile", po::value<std::string>(), "Path to logfile");
+  return desc;
 }
 
-ServerOptions loadOptions(int argc, char** argv, po::options_description&& desc) {
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-    if (vm.count("help") || argc == 1) {
-        std::cout << desc;
-        exit(0);
-    } 
-    return ServerOptions{vm["logfile"].as<std::string>()};
+ServerOptions loadOptions(int argc, char **argv,
+                          po::options_description &&desc) {
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+  if (vm.count("help") || argc == 1) {
+    std::cout << desc;
+    exit(0);
+  }
+  return ServerOptions{vm["logfile"].as<std::string>()};
 }
 
+int main(int argc, char **argv) {
+  auto serverOptions = loadOptions(argc, argv, createOptions());
+  Logger logger{serverOptions.logfile};
+  requesthandler::RequestHandlerFactory factory{logger};
 
-
-
-int main(int argc, char** argv) {
-    auto serverOptions = loadOptions(argc, argv, createOptions()); 
-    Logger logger{serverOptions.logfile};
-    requesthandler::RequestHandlerFactory factory{logger};
-     
-    ThreadPool thrPool;
-    info(logger, "About to start server at localhost:8080");
-    Server<requesthandler::RequestHandlerFactory, requesthandler::RequestHandler, ThreadPool> s{factory, thrPool, 8080};
-    s.run();
-	return 0;
+  ThreadPool thrPool;
+  info(logger, "About to start server at localhost:8080");
+  Server<requesthandler::RequestHandlerFactory, requesthandler::RequestHandler,
+         ThreadPool>
+      s{factory, thrPool, 8080};
+  s.run();
+  return 0;
 }
 
 /**
@@ -61,13 +59,14 @@ int main(int argc, char** argv) {
     void operator()() {
         std::vector<uint8_t> buffer(256);
         int n;
-                 
+
         n = read(socketId, buffer.data(), 255);
         if (n < 0) {
-            std::cout << "Tried to read socket:" << socketId << " errno:" << errno << std::endl;
+            std::cout << "Tried to read socket:" << socketId << " errno:" <<
+errno << std::endl;
             throw std::runtime_error("ERROR reading from socket");
         }
-        buffer.resize(n);    
+        buffer.resize(n);
         printf("Here is the message: %s\n",buffer.data());
         std::string msg("I got your message");
         n = write(socketId, msg.c_str(), msg.length());
@@ -87,7 +86,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    SimpleFeedbackExecutor(SimpleFeedbackExecutor&& other) : socketId(other.socketId) {
+    SimpleFeedbackExecutor(SimpleFeedbackExecutor&& other) :
+socketId(other.socketId) {
         other.socketId = -1;
     }
 private:
@@ -109,5 +109,6 @@ struct SameThreadThreadPool {
     }
 };
     SameThreadThreadPool thrPool;
-    Server<SimpleFeedbackExecutorFactory, SimpleFeedbackExecutor, SameThreadThreadPool> s{factory, thrPool, 8080};
+    Server<SimpleFeedbackExecutorFactory, SimpleFeedbackExecutor,
+SameThreadThreadPool> s{factory, thrPool, 8080};
  */
