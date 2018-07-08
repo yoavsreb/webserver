@@ -6,7 +6,8 @@
 #include <capnp/serialize.h>
 #include <string>
 #include <iostream>
-
+#include <vector>
+#include <unistd.h>
 namespace requesthandler {
 
 template<typename T1, typename T2>

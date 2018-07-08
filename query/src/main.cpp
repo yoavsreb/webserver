@@ -3,8 +3,8 @@
 #include <string>
 
 #include "AbstractLanguage.hpp"
-#include "Lexer.hpp"
 #include "parser.tab.hh"
+#include "Lexer.hpp"
 
 int main(int, char **) {
   std::cout << "Starting to parse input" << std::endl;
